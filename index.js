@@ -11,7 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Base de datos
+// Servir archivos estáticos desde la raíz del proyecto
+app.use(express.static(path.join(__dirname)));
+
+// Ruta principal que sirve malla-2021.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'malla-2021.html'));
+});
+
 const db = new sqlite3.Database('./database/database.sqlite', (err) => {
   if (err) {
     console.error('Error al abrir la base de datos:', err.message);
@@ -26,7 +33,7 @@ const db = new sqlite3.Database('./database/database.sqlite', (err) => {
   }
 });
 
-// Cargar dependencias
+// Cargar archivo de dependencias
 const dependenciasPath = path.join(__dirname, 'dependencias.json');
 let dependencias = {};
 try {
@@ -40,7 +47,6 @@ function obtenerCreditos(codigo) {
   return dependencias[codigo]?.creditos || 0;
 }
 
-// Rutas
 app.post('/guardar', (req, res) => {
   const { estudiante, materias } = req.body;
 
@@ -93,8 +99,10 @@ app.get('/ranking', (req, res) => {
     res.json(ranking.sort((a, b) => b.creditos - a.creditos));
   });
 });
+ // Servir archivos estáticos
+app.use(express.static(path.join(__dirname)));
 
-// ✅ Ruta para servir el archivo HTML al visitar "/"
+// Ruta para servir el HTML principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'malla-2021.html'));
 });
