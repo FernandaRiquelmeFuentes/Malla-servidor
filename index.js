@@ -2,6 +2,8 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Base de datos
 const db = new sqlite3.Database('./database/database.sqlite', (err) => {
   if (err) {
     console.error('Error al abrir la base de datos:', err.message);
@@ -23,11 +26,8 @@ const db = new sqlite3.Database('./database/database.sqlite', (err) => {
   }
 });
 
-// Cargar archivo de dependencias
-const fs = require('fs');
-const path = require('path');
+// Cargar dependencias
 const dependenciasPath = path.join(__dirname, 'dependencias.json');
-
 let dependencias = {};
 try {
   const rawData = fs.readFileSync(dependenciasPath);
@@ -40,6 +40,7 @@ function obtenerCreditos(codigo) {
   return dependencias[codigo]?.creditos || 0;
 }
 
+// Rutas
 app.post('/guardar', (req, res) => {
   const { estudiante, materias } = req.body;
 
@@ -91,6 +92,11 @@ app.get('/ranking', (req, res) => {
 
     res.json(ranking.sort((a, b) => b.creditos - a.creditos));
   });
+});
+
+// ✅ Ruta para servir el archivo HTML al visitar "/"
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'malla-2021.html'));
 });
 
 app.listen(PORT, () => {
