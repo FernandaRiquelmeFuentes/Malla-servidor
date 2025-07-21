@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malla 2021 - Ingeniería Civil de Minas</title>
+  <style>
+    body { background-color: #002f5f; color: white; font-family: Arial, sans-serif; margin: 0; padding: 20px; text-align: center; }
+    body.dark-mode { background-color: #121212; color: #ffffff; }
+    #creditos { font-size: 20px; margin-bottom: 20px; }
+    h1 { margin: 0 0 5px; }
+    h2 { margin: 0 0 15px; }
+    .instruccion { font-size: 16px; margin-bottom: 20px; }
+    button { margin: 0 10px 20px; padding: 10px 20px; font-size: 16px; background-color: #ffa500; color: #002f5f; border: none; border-radius: 5px; cursor: pointer; }
+    body.dark-mode button { background-color: #ffb74d; color: #121212; }
+    .main-container { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; padding-bottom: 20px; }
+    .year-group { display: flex; flex-direction: column; align-items: center; min-width: 260px; flex: none; }
+    .year-label { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+    .container { display: flex; flex-direction: row; gap: 10px; }
+    .semester { background-color: #001f3f; padding: 10px; border: 1px solid #ffa500; border-radius: 10px; min-width: 200px; }
+    body.dark-mode .semester { background-color: #2a2a2a; border-color: #ffcc80; }
+    .semester h3 { margin: 0 0 10px; color: #ffa500; font-size: 16px; }
+    .subject { background-color: white; color: black; padding: 8px; margin: 6px 0; border-radius: 6px; cursor: pointer; transition: background-color 0.3s; }
+    body.dark-mode .subject { background-color: #f0f0f0; color: #000; }
+    .subject .nombre { font-weight: bold; }
+    .subject .codigo, .subject .creditos { font-size: 12px; color: #333; }
+    .subject.approved { background-color: orange; }
+    body.dark-mode .subject.approved { background-color: #ffb74d; }
+    .subject.hover-prereq { background-color: #3399ff !important; }
+    /* Posicionar botón modo oscuro en esquina inferior izquierda */
+    #modoOscuroBtn { position: fixed; bottom: 20px; left: 20px; z-index: 1000; }
+  </style>
+</head>
+<body>
+<div style="position:absolute; top:10px; left:10px; font-size:12px;">Creado por Fernanda Riquelme Fuentes</div>
+  <div id="creditos">Créditos aprobados: 0 / 226</div>
+  <h1>Malla 2021 - Ingeniería Civil de Minas</h1>
+  <h2>Universidad de Concepción</h2>
+  <p class="instruccion">Haz clic en las asignaturas aprobadas.</p>
+  <button id="guardarBtn">Guardar progreso</button>
+  <button id="resetearBtn">Reiniciar selección</button>
+  <button id="modoOscuroBtn">Modo oscuro</button>
+  <div id="mainContainer" class="main-container"></div>
+
+  <script>
+    // Modo oscuro toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const body = document.body;
+      const btnDark = document.getElementById('modoOscuroBtn');
+      const stored = localStorage.getItem('darkMode') === 'true';
+      if (stored) body.classList.add('dark-mode');
+      btnDark.textContent = body.classList.contains('dark-mode') ? 'Desactivar modo oscuro' : 'Modo oscuro';
+      btnDark.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const active = body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', active);
+        btnDark.textContent = active ? 'Desactivar modo oscuro' : 'Modo oscuro';
+      });
+    });
+
+    const dependencias = {
+      "525150": ["525140"],
+      "551506": ["523250"],
+      "527150": ["527140"],
+      "521227": ["525150", "527150"],
+      "521230": ["503202", "521227"],
+      "551512": ["551250"],
+      "543354": ["543351"],
+      "999335": ["999334"],
+      "580701": [],
+      "551413": ["580701", "551250"],
+      "543351": ["510150", "527150"],
+      "523250": ["525150", "527150"],
+      "551425": ["523250"],
+      "525225": ["525150", "527150"],
+      "510150": ["510140"],
+      "551414": ["999334", "551314"],
+      "551410": ["551321", "999333"],
+      "554150": [],
+      "500702": ["500701"],
+      "500703": ["500702"],
+      "500704": ["500703"],
+      "580301": [],
+      "551120": ["551102"],
+      "551591": [],
+      "551514": [],
+      "541225": ["527150", "510150", "521227"],
+      "554323": ["521227", "525225", "541225"],
+      "551314": ["541225"],
+      "551321": ["542206"],
+      "551030": ["525150", "527150"],
+      "551451": ["551512"],
+      "551516": ["551414", "551421"],
+      "551421": ["551410", "551414"],
+      "551557": ["551451", "551516"],
+      "551568": ["551451", "551516"],
+      "531150": ["531140"],
+      "551501": ["551250"],
+      "551522": ["554150"],
+      "551200": ["551120"],
+      "551250": ["551200"],
+      "542206": ["554323"],
+      "542355": ["554323", "542206"],
+      "500151": ["551120"],
+      "999334": ["999333"],
+      "551695": []
+    };
+
+    const malla = [
+      [["Introducción a la Ing. de Minas","551120",2],
+       ["Química General I","531140",5],
+       ["Cálculo I","527140",5],
+       ["Álgebra I","525140",4],
+       ["Física I","510140",4]],
+      [["Intro. a la Inn. en Ingeniería","500151",2],
+       ["Química General II","531150",5],
+       ["Cálculo II","527150",5],
+       ["Álgebra II","525150",4],
+       ["Física II","510150",4]],
+      [["Taller métodos de explotación I","551200",3],
+       ["Métodos de Optimización","551030",3],
+       ["Mecánica","541225",4],
+       ["Programación","503202",3],
+       ["Ecuaciones diferenciales","525225",4],
+       ["Cálculo III","521227",5]],
+      [["Taller métodos de explotación II","551250",2],
+       ["Geología y Mineralogía","999333",4],
+       ["Mecánica de Fluidos","554323",4],
+       ["Electromagnetismo","543351",3],
+       ["Cálculo Numérico","521230",4],
+       ["Estadística y Probabilidades","523250",4],
+       ["Complementaria 1","C1",2]],
+      [["Práctica Laboral","551340",2],
+       ["Inglés Comunicativo I","500701",3],
+       ["Economía","580701",3],
+       ["Geología estructural","999334",4],
+       ["Mecánica de sólidos","551314",3],
+       ["Circuito y Maq. Eléctricas","543354",3],
+       ["Termodinámica","542206",4],
+       ["Complementaria 2","C2",2]],
+      [["Inglés Comunicativo II","500702",3],
+       ["Int. a la sustent. en Ingeniería","554150",2],
+       ["Depósito Minerales","999335",4],
+       ["Metalurgia Extractiva","551321",3],
+       ["Innovación","580301",3],
+       ["Transferencia de Calor","542355",4]],
+      [["Inglés Comunicativo III","500703",3],
+       ["Carguío y Transporte","551512",4],
+       ["Economía de Minerales","551413",4],
+       ["Geomecánica","551414",3],
+       ["Geometalurgia","551410",3],
+       ["Formulación de proyectos","580703",4]],
+      [["Inglés Comunicativo IV","500704",3],
+       ["Minería a Cielo Abierto","551451",5],
+       ["Estimación Rec. Minerales","551425",4],
+       ["Perforación y Tronadura","551421",3],
+       ["Topografía","551323",4],
+       ["Complementaria 3","C3",2]],
+      [["Simulación de Proc.Mineros","551501",4],
+       ["Sustentabilidad en Minería","551522",4],
+       ["Análisis de datos en minería","551506",3],
+       ["Minería Subterránea","551516",5],
+       ["Seminario","551500",2],
+       ["Electiva 1","E1",3]],
+      [["Gestión de Empresas","580705",3],
+       ["Proy. de Ing. de Minas","551568",4],
+       ["Planificación Minera","551557",5],
+       ["Legislación y Seguridad Minera","551514",3],
+       ["Electiva 2","E2",3],
+       ["Introd. a Memoria de Título","551591",2]],
+      [["Práctica Profesional","551690",4],
+       ["Memoria de Título","551695",20]]
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const main = document.getElementById('mainContainer');
+      const creditosDiv = document.getElementById('creditos');
+      const elems = {};
+
+      malla.forEach((subjects, idx) => {
+        const yearIdx = Math.floor(idx / 2);
+        let yearGroup = main.querySelectorAll('.year-group')[yearIdx];
+        if (!yearGroup) {
+          yearGroup = document.createElement('div'); yearGroup.className = 'year-group';
+          const label = document.createElement('div'); label.className = 'year-label'; label.textContent = `Año ${yearIdx + 1}`;
+          yearGroup.appendChild(label);
+          const container = document.createElement('div'); container.className = 'container';
+          yearGroup.appendChild(container);
+          main.appendChild(yearGroup);
+        }
+        const container = yearGroup.querySelector('.container');
+        const semDiv = document.createElement('div'); semDiv.className = 'semester';
+        const semNum = idx + 1;
+        semDiv.innerHTML = `<h3>Semestre ${semNum}</h3>`;
+        subjects.forEach(([nombre, codigo, creditos]) => {
+          const el = document.createElement('div');
+          el.className = 'subject';
+          el.dataset.codigo = codigo;
+          el.dataset.creditos = creditos;
+          el.innerHTML = `<div class="nombre">${nombre}</div><div class="codigo">(${codigo})</div><div class="creditos">${creditos} créditos</div>`;
+          semDiv.appendChild(el);
+          elems[codigo] = el;
+        });
+        container.appendChild(semDiv);
+      });
+
+      function actualizarCreditos() {
+        let total = 0;
+        Object.values(elems).forEach(el => el.classList.contains('approved') && (total += +el.dataset.creditos));
+        creditosDiv.textContent = `Créditos aprobados: ${total} / 226`;
+      }
+
+      Object.values(elems).forEach(el => {
+        const code = el.dataset.codigo;
+        el.addEventListener('mouseenter', () => {
+          const prereqs = Array.isArray(dependencias[code]) ? dependencias[code] : [];
+          prereqs.forEach(p => elems[p]?.classList.add('hover-prereq'));
+        });
+        el.addEventListener('mouseleave', () => document.querySelectorAll('.hover-prereq').forEach(x => x.classList.remove('hover-prereq')));
+        el.addEventListener('click', () => { el.classList.toggle('approved'); actualizarCreditos(); });
+      });
+
+      document.getElementById('guardarBtn').onclick = () => { Object.values(elems).forEach(el => localStorage.setItem(el.innerText, el.classList.contains('approved'))); alert('Progreso guardado'); };
+      document.getElementById('resetearBtn').onclick = () => { if (confirm('¿Reiniciar selección?')) { Object.values(elems).forEach(el => { el.classList.remove('approved'); localStorage.removeItem(el.innerText); }); actualizarCreditos(); } };
+
+      actualizarCreditos();
+    });
+  </script>
+
+<!-- botón de ranking -->
+<button id="rankingBtn" style="position:fixed; bottom:100px; right:20px; z-index:1000;">Ranking</button>
+
+<!-- modal de ranking -->
+<div id="rankingModal" style="display:none; position:fixed; top:10%; left:10%; width:80%; max-height:70vh; background:white; color:black; padding:20px; border-radius:10px; box-shadow:0 0 10px black; z-index:9999; overflow:auto;">
+  <h2 style="color:#002f5f;">Ranking de compañer@s por créditos aprobados</h2>
+  <ul id="rankingLista" style="list-style:none; padding:0;"></ul>
+  <button onclick="document.getElementById('rankingModal').style.display='none'">Cerrar</button>
+</div>
+
+<script>
+  // Ranking fetch
+  const btnRanking = document.getElementById("rankingBtn");
+  const modal = document.getElementById("rankingModal");
+  const lista = document.getElementById("rankingLista");
+
+  btnRanking.onclick = () => {
+    fetch("http://localhost:3000/ranking")
+      .then(res => res.json())
+      .then(data => {
+        lista.innerHTML = "";
+        data.forEach((row, index) => {
+          let totalCreditos = 0;
+          const materias = JSON.parse(row.materias || "{}");
+          for (const [codigo, aprobado] of Object.entries(materias)) {
+            const el = document.querySelector(`.subject[data-codigo="${codigo}"]`);
+            if (aprobado && el) totalCreditos += parseInt(el.dataset.creditos);
+          }
+
+          const li = document.createElement("li");
+          li.style.marginBottom = "15px";
+          li.innerHTML = `
+            <strong>alumn@ ${index + 1}</strong>: ${totalCreditos} créditos
+            <div style="background:#ccc; width:100%; height:15px; border-radius:4px; overflow:hidden; margin-top:5px;">
+              <div style="height:100%; width:${(totalCreditos / 226) * 100}%; background:#ffa500;"></div>
+            </div>
+          `;
+          lista.appendChild(li);
+        });
+        modal.style.display = "block";
+      })
+      .catch(err => alert("Error al obtener el ranking: " + err.message));
+  };
+</script>
+
+</body>
+</html>
